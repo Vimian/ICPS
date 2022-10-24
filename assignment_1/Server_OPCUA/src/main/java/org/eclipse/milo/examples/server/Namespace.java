@@ -10,10 +10,13 @@
 
 package org.eclipse.milo.examples.server;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import org.eclipse.milo.examples.server.data.Device;
+import org.eclipse.milo.examples.server.nodes.Folder;
 import org.eclipse.milo.opcua.sdk.core.AccessLevel;
 import org.eclipse.milo.opcua.sdk.core.Reference;
 import org.eclipse.milo.opcua.sdk.server.Lifecycle;
@@ -114,6 +117,23 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
 
         // Add the rest of the nodes
         addVariableNodes(folderNode);
+
+        ArrayList<Device> deviceArrayList = null;
+        try {
+            deviceArrayList = RequestUtils.getDevices();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        for (Device device : deviceArrayList) {
+            String name = device.getName();
+
+            Folder.Create(getNodeContext(),
+                    newNodeId(device.getId() + "hello"),
+                    newQualifiedName(name),
+                    name,
+                    getNodeManager());
+        }
     }
 
     private void startBogusEventNotifier() {
