@@ -15,8 +15,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import org.eclipse.milo.examples.server.data.Datapoint;
 import org.eclipse.milo.examples.server.data.Device;
+import org.eclipse.milo.examples.server.data.LogicalDevice;
 import org.eclipse.milo.examples.server.nodes.Folder;
+import org.eclipse.milo.examples.server.nodes.Object;
+import org.eclipse.milo.examples.server.nodes.Variable;
 import org.eclipse.milo.opcua.sdk.core.AccessLevel;
 import org.eclipse.milo.opcua.sdk.core.Reference;
 import org.eclipse.milo.opcua.sdk.server.Lifecycle;
@@ -29,6 +33,7 @@ import org.eclipse.milo.opcua.sdk.server.model.nodes.objects.BaseEventTypeNode;
 import org.eclipse.milo.opcua.sdk.server.model.nodes.objects.ServerTypeNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.UaFolderNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.UaNode;
+import org.eclipse.milo.opcua.sdk.server.nodes.UaObjectNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.UaVariableNode;
 import org.eclipse.milo.opcua.sdk.server.nodes.filters.AttributeFilters;
 import org.eclipse.milo.opcua.sdk.server.util.SubscriptionModel;
@@ -117,23 +122,6 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
 
         // Add the rest of the nodes
         addVariableNodes(folderNode);
-
-        ArrayList<Device> deviceArrayList = null;
-        try {
-            deviceArrayList = RequestUtils.getDevices();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        for (Device device : deviceArrayList) {
-            String name = device.getName();
-
-            Folder.Create(getNodeContext(),
-                    newNodeId(device.getId() + "hello"),
-                    newQualifiedName(name),
-                    name,
-                    getNodeManager());
-        }
     }
 
     private void startBogusEventNotifier() {
@@ -188,11 +176,46 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
     }
 
     private void addVariableNodes(UaFolderNode rootNode) {
-        addStatic(rootNode);
-        addDynamic(rootNode);
-        addMyFolder(rootNode);
-    }
+        ArrayList<Device> deviceArrayList = null;
+        try {
+            deviceArrayList = RequestUtils.getDevices();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        for (Device device : deviceArrayList) {
+            UaFolderNode uaFolderNode = Folder.Create(getNodeContext(),
+                    newNodeId(device.getEui()),
+                    newQualifiedName(device.getDefaultName()),
+                    device.getName());
+
+            getNodeManager().addNode(uaFolderNode);
+            rootNode.addOrganizes(uaFolderNode);
+
+            for (LogicalDevice logicalDevice : device.getLogicalDeviceArrayList()) {
+                UaObjectNode uaObjectNode = Object.Create(getNodeContext(),
+                        newNodeId(uaFolderNode.getNodeId().getIdentifier().toString() +
+                                "_" + logicalDevice.getKey()),
+                        newQualifiedName(logicalDevice.getKey()),
+                        logicalDevice.getName());
+
+                getNodeManager().addNode(uaObjectNode);
+                uaFolderNode.addOrganizes(uaObjectNode);
+
+                for (Datapoint datapoint : logicalDevice.getDatapointArrayList()) {
+                    UaVariableNode uaVariableNode = Variable.Create(datapoint,
+                            getNodeContext(),
+                            newNodeId(uaObjectNode.getNodeId().getIdentifier().toString() +
+                                    "_" + datapoint.getKey()),
+                            newQualifiedName(datapoint.getName()),
+                            datapoint.getName());
+
+                    getNodeManager().addNode(uaVariableNode);
+                    uaObjectNode.addComponent(uaVariableNode);
+                }
+            }
+        }
+    }
 
     private void addMyFolder(UaFolderNode rootNode) {
         UaFolderNode scalarTypesFolder = new UaFolderNode(
@@ -226,7 +249,6 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
         getNodeManager().addNode(node);
         scalarTypesFolder.addOrganizes(node);
     }
-
 
     private void addStatic(UaFolderNode rootNode) {
         UaFolderNode scalarTypesFolder = new UaFolderNode(

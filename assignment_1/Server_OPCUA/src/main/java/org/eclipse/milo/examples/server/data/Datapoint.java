@@ -41,4 +41,36 @@ public class Datapoint {
                 "lastUpdated: " + lastUpdated + "\n" +
                 "value: " + value;
     }
+
+    public String getKey() {
+        return key;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public String getAccess() {
+        return access;
+    }
+
+    public String getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
 }
