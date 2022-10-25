@@ -10,14 +10,12 @@
 
 package org.eclipse.milo.examples.server;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import org.eclipse.milo.examples.server.data.Datapoint;
 import org.eclipse.milo.examples.server.data.Device;
 import org.eclipse.milo.examples.server.data.LogicalDevice;
+import org.eclipse.milo.examples.server.data.Path;
 import org.eclipse.milo.examples.server.nodes.Folder;
 import org.eclipse.milo.examples.server.nodes.Object;
 import org.eclipse.milo.examples.server.nodes.Variable;
@@ -54,6 +52,8 @@ import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.
 import static org.eclipse.milo.opcua.stack.core.types.builtin.unsigned.Unsigned.ushort;
 
 public class Namespace extends ManagedNamespaceWithLifecycle {
+
+    public static HashMap<String, Path> pathHashMap = new HashMap<String, Path>();
 
     public static final String NAMESPACE_URI = "urn:sdu:milo:ICPS";
 
@@ -212,6 +212,11 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
 
                     getNodeManager().addNode(uaVariableNode);
                     uaObjectNode.addComponent(uaVariableNode);
+
+                    pathHashMap.put(uaVariableNode.getNodeId().getIdentifier().toString(),
+                            new Path(device.getId() + "",
+                                    logicalDevice.getKey(),
+                                    datapoint.getKey()));
                 }
             }
         }
@@ -332,6 +337,7 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
     @Override
     public void onDataItemsModified(List<DataItem> dataItems) {
         subscriptionModel.onDataItemsModified(dataItems);
+        System.out.println(1);
     }
 
     @Override
@@ -342,6 +348,10 @@ public class Namespace extends ManagedNamespaceWithLifecycle {
     @Override
     public void onMonitoringModeChanged(List<MonitoredItem> monitoredItems) {
         subscriptionModel.onMonitoringModeChanged(monitoredItems);
+        System.out.println(2);
     }
 
+    public static Path getPath(String id) {
+        return pathHashMap.get(id);
+    }
 }

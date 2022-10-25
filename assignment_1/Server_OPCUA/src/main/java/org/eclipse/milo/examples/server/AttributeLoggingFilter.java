@@ -43,6 +43,12 @@ public class AttributeLoggingFilter implements AttributeFilter {
                 "get nodeId={} attributeId={} value={}",
                 ctx.getNode().getNodeId(), attributeId, value
             );
+
+            try {
+                RequestUtils.fetchValueToDatapoint(ctx.getNode().getNodeId().getIdentifier().toString(), ctx.getNode());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return value;
@@ -56,6 +62,12 @@ public class AttributeLoggingFilter implements AttributeFilter {
                 "set nodeId={} attributeId={} value={}",
                 ctx.getNode().getNodeId(), attributeId, value
             );
+
+            try {
+                RequestUtils.setDatapointValue(ctx.getNode().getNodeId().getIdentifier().toString(), value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         ctx.setAttribute(attributeId, value);
