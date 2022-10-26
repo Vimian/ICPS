@@ -20,7 +20,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class RequestUtils {
-    private static String base_url = "http://gw-2500.sandbox.tek.sdu.dk/ssapi";
+    private static String base_url = "http://gw-2ab4.sandbox.tek.sdu.dk/ssapi";
 
     public static void main(String[] args) {
         try {
